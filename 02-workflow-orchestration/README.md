@@ -139,12 +139,180 @@ Did you take notes? You can share them here:
 ## 2024 notes
 
 * Add your notes above this line
+HOMEWORK SUBMISSION 2024:
+Copied of the word without the diagram:
+Homework Module 2 Mage:
+Diagram:
+only visible in Word
+ 
+Code load_api_data
+import io
+import pandas as pd
+import requests
+if 'data_loader' not in globals():
+    from mage_ai.data_preparation.decorators import data_loader
+if 'test' not in globals():
+    from mage_ai.data_preparation.decorators import test
 
-## 2023 notes
+@data_loader
+def load_data_from_api(*args, **kwargs):
+    
+    urls = ['https://github.com/DataTalksClub/nyc-tlc-data/releases/download/green/green_tripdata_2020-10.csv.gz', 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/green/green_tripdata_2020-11.csv.gz','https://github.com/DataTalksClub/nyc-tlc-data/releases/download/green/green_tripdata_2020-12.csv.gz']
 
-See [here](../cohorts/2023/week_2_workflow_orchestration#community-notes)
+    taxi_dtypes = {
+        'VendorID': pd.Int64Dtype(),
+        'passenger_count': pd.Int64Dtype(),
+        'trip_distance': float,
+        'RatecodeID': pd.Int64Dtype(),
+        'store_and_fwd_flag': str,
+        'PULocationID': pd.Int64Dtype(),
+        'DOLocationID': pd.Int64Dtype(),
+        'payment_type': pd.Int64Dtype(),
+        'fare_amount': float,
+        'extra': float,
+        'mta_tax': float,
+        'tip_amount': float,
+        'tolls_amount': float,
+        'improvement_surcharge': float,
+        'total_amount': float,
+        'congestion_surcharge': float 
+    }
+    
+
+    parse_dates = ['lpep_pickup_datetime', 'lpep_dropoff_datetime']
+    
+    dfs = [pd.read_csv(url, sep=",", compression="gzip", dtype=taxi_dtypes,parse_dates=parse_dates) for url in urls]    
+    
+    data = pd.concat(dfs, ignore_index=True)
+
+    return data
+
+@test
+def test_output(output, *args) -> None:
+    """
+    Template code for testing the output of the block.
+    """
+    assert output is not None, 'The output is undefined'
 
 
-## 2022 notes
+code transform_datas_needed:
+import pandas as pd
 
-See [here](../cohorts/2022/week_2_data_ingestion#community-notes)
+if 'transformer' not in globals():
+    from mage_ai.data_preparation.decorators import transformer
+if 'test' not in globals():
+    from mage_ai.data_preparation.decorators import test
+
+@transformer
+def transform(data, *args, **kwargs):
+
+    data['lpep_pickup_date'] = pd.to_datetime(data['lpep_pickup_datetime']).dt.date
+    #data['monat'] = data['lpep_pickup_datetime'].dt.month
+    data['monats'] = pd.to_datetime(data['lpep_pickup_datetime']).dt.month
+
+    print("Rows im Oktober:",data['monats'].isin([1]).sum())
+    print("Rows im Oktober:",data['monats'].isin([2]).sum())
+    print("Rows im Oktober:",data['monats'].isin([3]).sum())
+    print("Rows im Oktober:",data['monats'].isin([4]).sum())
+    print("Rows im Oktober:",data['monats'].isin([5]).sum())
+    print("Rows im Oktober:",data['monats'].isin([6]).sum())
+    print("Rows im Oktober:",data['monats'].isin([7]).sum())
+    print("Rows im Oktober:",data['monats'].isin([8]).sum())
+    print("Rows im Oktober:",data['monats'].isin([9]).sum())
+    print("Rows im Oktober:",data['monats'].isin([10]).sum())
+    print("Rows im Oktober:",data['monats'].isin([11]).sum())
+    print("Rows im Oktober:",data['monats'].isin([12]).sum())
+
+    print(data['monats'].unique())
+    return data[data['monats']>=10]
+
+@test
+def test_output(output, *args) -> None:
+    """
+    Template code for testing the output of the block.
+    """
+    assert output is not None, 'The output is undefined'
+
+code transform_passengers
+if 'transformer' not in globals():
+    from mage_ai.data_preparation.decorators import transformer
+if 'test' not in globals():
+    from mage_ai.data_preparation.decorators import test
+
+@transformer
+def transform(data, *args, **kwargs):
+    # Specify your transformation logic here
+    print("Rows with 0 Passengers:",data['passenger_count'].isin([0]).sum())
+
+    return data[data['passenger_count']>0]
+
+@test
+def test_output(output, *args) -> None:
+    """
+    Template code for testing the output of the block.
+    """
+    assert output is not None, 'The output is undefined'
+
+
+code transform_trip_distance
+if 'transformer' not in globals():
+    from mage_ai.data_preparation.decorators import transformer
+if 'test' not in globals():
+    from mage_ai.data_preparation.decorators import test
+
+@transformer
+def transform(data, *args, **kwargs):
+
+    print(data['VendorID'].unique())
+    print("Rows with 0 Trip Distance:",data['trip_distance'].isin([0]).sum())
+
+    return data[data['trip_distance']>0]
+   
+
+@test
+def test_output(output, *args) -> None:
+    """
+    Template code for testing the output of the block.
+    """
+    assert output is not None, 'The output is undefined'
+
+
+code taxi_to_gcp_partionend:
+
+import pyarrow as pa
+import pyarrow.parquet as pq
+import os
+
+if 'data_exporter' not in globals():
+    from mage_ai.data_preparation.decorators import data_exporter
+
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] ="/home/src/tobi-mage.json"
+
+bucket_name = 'mage-zoomcamp-tobi-wissen'
+project_id = 'tobi-mage-zoom-321'
+table_name = "nyc_green_taxi_data"
+root_path = f'{bucket_name}/{table_name}'
+
+@data_exporter
+def export_data(data, *args, **kwargs):
+    data['lpep_pickup_date'] = data['lpep_pickup_datetime'].dt.date
+
+    table = pa.Table.from_pandas(data)
+    gcs = pa.fs.GcsFileSystem()
+
+    pq.write_to_dataset(
+        table,
+        root_path=root_path,
+        partition_cols = ['lpep_pickup_date'],
+        filesystem = gcs
+    )
+
+
+
+code write_taxi_to_bigquery
+Select * from {{df_1}}
+
+
+
+
+
