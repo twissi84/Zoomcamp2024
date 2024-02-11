@@ -44,8 +44,7 @@
 
 * [Homework](../cohorts/2023/week_3_data_warehouse/homework.md)
 * Docomentation of the homework:
-* Load data in Mage:
-* import io
+import io
 import pandas as pd
 import requests
 if 'data_loader' not in globals():
@@ -68,31 +67,14 @@ def load_data_from_api(*args, **kwargs):
 ]
 
 
-    taxi_dtypes = {
-        'VendorID': pd.Int64Dtype(),
-        'passenger_count': pd.Int64Dtype(),
-        'trip_distance': float,
-        'RatecodeID': pd.Int64Dtype(),
-        'store_and_fwd_flag': str,
-        'PULocationID': pd.Int64Dtype(),
-        'DOLocationID': pd.Int64Dtype(),
-        'payment_type': pd.Int64Dtype(),
-        'fare_amount': float,
-        'extra': float,
-        'mta_tax': float,
-        'tip_amount': float,
-        'tolls_amount': float,
-        'improvement_surcharge': float,
-        'total_amount': float,
-        'congestion_surcharge': float 
-    }
-    
-
-    parse_dates = ['lpep_pickup_datetime', 'lpep_dropoff_datetime']
     
     dfs = [pd.read_parquet(url) for url in urls]    
     
     data = pd.concat(dfs, ignore_index=True)
+
+    data['lpep_pickup_datetime'] = pd.to_datetime(data['lpep_pickup_datetime']).dt.date
+
+    data['lpep_dropoff_datetime'] = pd.to_datetime(data['lpep_dropoff_datetime']).dt.date
 
     return data
 
@@ -103,7 +85,7 @@ def test_output(output, *args) -> None:
     """
     assert output is not None, 'The output is undefined'
 
-Upload Data to Bucket without partition:
+Import to GC Bucket:
 from mage_ai.settings.repo import get_repo_path
 from mage_ai.io.config import ConfigFileLoader
 from mage_ai.io.google_cloud_storage import GoogleCloudStorage
@@ -133,7 +115,7 @@ def export_data_to_google_cloud_storage(df: DataFrame, **kwargs) -> None:
         bucket_name,
         object_key,
     )
-upload data with partition:
+Partionend input to GC Bucket:
 import pyarrow as pa
 import pyarrow.parquet as pq
 import os
@@ -161,9 +143,52 @@ def export_data(data, *args, **kwargs):
         partition_cols = ['lpep_pickup_date'],
         filesystem = gcs
     )
+    
+Questions in BigQuery:
+#Create External Table for the Homework. Both from the partionized dataset and without
+CREATE EXTERNAL TABLE `earnest-goal-410521.ny_taxi.green_tripdata_2022_partionized`
+  OPTIONS (
+    format ="Parquet",
+    uris = ['gs://mage-zoomcamp-tobi-wissen/nyc_green_taxi_data_homework/lpep_pickup_date=*.parquet']
+    );
 
+CREATE OR REPLACE EXTERNAL TABLE `ny_taxi.green_tripdata_2022`
+OPTIONS (
+  format = 'Parquet',
+  uris = ['gs://mage-zoomcamp-tobi-wissen/nyc_green_taxi_homework.parquet']
+);
 
+#Question 1 what is the count for the dataset?
+SELECT count(*) FROM `ny_taxi.green_tripdata_2022`;
 
+#Question 2 Write a query to count the distinct number of PULocationIDs for the entire dataset on both the tables.What is the estimated amount of data that will be read when this query is executed on the External Table and the Table? First create a table from the external table
+
+create or replace table ny_taxi.local_green_tripdata_2022 as Select * from `ny_taxi.green_tripdata_2022`;
+
+SELECT COUNT(DISTINCT(PULocationID)) FROM `ny_taxi.green_tripdata_2022`;
+
+SELECT COUNT(DISTINCT(PULocationID)) FROM `ny_taxi.local_green_tripdata_2022`;
+
+#Question 3: How many records have a fare_amount of 0?
+
+select count(fare_amount)
+from `ny_taxi.green_tripdata_2022`
+where fare_amount =0;
+
+#Question 4: Partionend table
+create or replace table ny_taxi.local_green_tripdata_2022_partionend
+PARTITION BY DATE(lpep_pickup_datetime) as( Select * from `ny_taxi.green_tripdata_2022`);
+
+#Question 5: Write a query to retrieve the distinct PULocationID between lpep_pickup_datetime 06/01/2022 and 06/30/2022 (inclusive)
+
+#Use the materialized table you created earlier in your from clause and note the estimated bytes. Now change the table in the from clause to the partitioned table you created for question 4 and note the estimated bytes processed. What are these values? 
+
+select * from `ny_taxi.local_green_tripdata_2022`LIMIT 10
+
+select distinct (PULocationID)
+from `ny_taxi.local_green_tripdata_2022`
+where lpep_pickup_datetime >='2022-06-01' and lpep_pickup_datetime <='2022-06-30'
+group by PULocationID;
 
 
 ## Community notes
