@@ -190,6 +190,53 @@ from `ny_taxi.local_green_tripdata_2022`
 where lpep_pickup_datetime >='2022-06-01' and lpep_pickup_datetime <='2022-06-30'
 group by PULocationID;
 
+---------------------------------------------------------------------------
+
+HOMEWORK OF THE WORKSHOP:
+Question 1:
+sum of the value
+def square_root_generator(limit):
+    n = 1
+    while n <= limit:
+        yield n ** 0.5
+        n += 1
+
+# Example usage:
+limit = 5
+generator = square_root_generator(limit)
+z=0
+for sqrt_value in generator:
+    z=sqrt_value+z
+    print(sqrt_value)
+    print("Summiert",z)
+
+Question 2:
+I changed limit to 13 and used the last value
+
+Question 3:
+def people_1():
+    for i in range(1, 6):
+        yield {"ID": i, "Name": f"Person_{i}", f"Age": 25 + i, "City": "City_A"}
+
+alter=0
+for person in people_1():
+    print(person)
+    alter=person.get("Age")+alter
+    print(alter)
+
+
+def people_2():
+    for i in range(3, 9):
+        yield {"ID": i, "Name": f"Person_{i}", f"Age": 30 + i, "City": "City_B", "Occupation": f"Job_{i}"}
+for person in people_2():
+    print(person)
+    alter=person.get("Age")+alter
+    print(alter)
+
+Question 4:
+
+
+
 
 ## Community notes
 
