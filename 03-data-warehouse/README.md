@@ -201,7 +201,7 @@ def square_root_generator(limit):
         yield n ** 0.5
         n += 1
 
-# Example usage:
+
 limit = 5
 generator = square_root_generator(limit)
 z=0
@@ -236,7 +236,7 @@ for person in people_2():
 Question 4:
 
 
-
+# Example usage:
 
 ## Community notes
 
