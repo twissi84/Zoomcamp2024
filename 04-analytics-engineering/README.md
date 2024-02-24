@@ -1,3 +1,25 @@
+#Week 4 Homework:
+Question 1:
+What happens when we execute dbt build --vars '{'is_test_run':'true'}' You'll need to have completed the "Build the first dbt models" video.
+
+It applies a limit 100 to all of our models
+
+Question 2:
+What is the code that our CI job will run?
+
+The code from a development branch requesting a merge to main
+
+Question 3:
+What is the count of records in the model fact_fhv_trips after running all dependencies with the test run variable disabled (:false)?
+
+Count is 22998722
+
+Question 4:
+What is the service that had the most rides during the month of July 2019 month with the biggest amount of rides after building a tile for the fact_fhv_trips table?
+
+Yellow Taxi
+
+
 # Week 4: Analytics Engineering 
 Goal: Transforming the data loaded in DWH to Analytical Views developing a [dbt project](taxi_rides_ny/README.md).
 [Slides](https://docs.google.com/presentation/d/1xSll_jv0T8JF4rYZvLHfkJXYqUjPtThA/edit?usp=sharing&ouid=114544032874539580154&rtpof=true&sd=true)
