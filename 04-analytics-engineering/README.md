@@ -12,6 +12,77 @@ The code from a development branch requesting a merge to main
 Question 3:
 What is the count of records in the model fact_fhv_trips after running all dependencies with the test run variable disabled (:false)?
 
+File ```models/staging/stg_fhv_trips_data.sql```
+```
+{{ config(materialized="view") }}
+
+select
+    -- identifiers
+    {{ dbt_utils.surrogate_key(['dispatching_base_num', 'pickup_datetime']) }} as tripid,
+    dispatching_base_num,
+    cast(PUlocationID as integer) as  pickup_locationid,
+    cast(DOlocationID as integer) as dropoff_locationid,
+
+    -- timestamps
+    cast(pickup_datetime as timestamp) as pickup_datetime,
+    cast(dropOff_datetime as timestamp) as dropoff_datetime,
+
+    -- trip info
+    cast(SR_Flag as integer) as sr_flag,
+    Affiliated_base_number as affiliated_base_number
+      
+from {{ source('staging', 'fhv_trips_data') }}
+where extract(year from pickup_datetime) = 2019
+and dispatching_base_num is not null
+
+-- dbt build <model.sql> --var 'is_test_run: false'
+{% if var('is_test_run', default=true) %}
+
+  limit 100
+
+{% endif %}
+
+```
+
+Do not add a deduplication step. Run this models without limits (is_test_run: false).
+
+Create a core model similar to fact trips, but selecting from stg_fhv_tripdata and joining with dim_zones.
+Similar to what we've done in fact_trips, keep only records with known pickup and dropoff locations entries for pickup and dropoff locations.
+File ```models/core/fact_fhv_trips.sql```
+```
+{{ config(materialized='table') }}
+
+with fhv_data as (
+    select *,
+        'FHV' as service_type
+    from {{ ref('stg_fhv_trips_data') }}
+),
+
+dim_zones as (
+    select * from {{ ref('dim_zones') }}
+    where borough != 'Unknown'
+)
+select
+    fhv_data.tripid,
+    fhv_data.service_type,
+    fhv_data.dispatching_base_num,
+    fhv_data.pickup_locationid,
+    pickup_zone.borough as pickup_borough,
+    pickup_zone.zone as pickup_zone,
+    fhv_data.dropoff_locationid,
+    dropoff_zone.borough as dropoff_borough,
+    dropoff_zone.zone as dropoff_zone,
+    fhv_data.pickup_datetime,
+    fhv_data.dropoff_datetime,
+    fhv_data.sr_flag,
+    fhv_data.affiliated_base_number
+from fhv_data
+inner join dim_zones as pickup_zone
+on fhv_data.pickup_locationid = pickup_zone.locationid
+inner join dim_zones as dropoff_zone
+on fhv_data.dropoff_locationid = dropoff_zone.locationid
+```
+
 Count is 22998722
 
 Question 4:
