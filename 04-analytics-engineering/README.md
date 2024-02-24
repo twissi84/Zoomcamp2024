@@ -2,7 +2,7 @@
 Question 1:
 What happens when we execute dbt build --vars '{'is_test_run':'true'}' You'll need to have completed the "Build the first dbt models" video.
 
-It applies a limit 100 to all of our models
+It applies a limit 100 only to our staging models
 
 Question 2:
 What is the code that our CI job will run?
