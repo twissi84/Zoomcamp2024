@@ -53,7 +53,12 @@ Script to prepare the Dataset [download_data.sh](code/download_data.sh)
 
 
 ### Homework
+My Homework:
+Question 1 Spark version:
+My version shows 3.3.2
 
+Question 5: Port
+4040
 
 * [Homework](../cohorts/2023/week_5_batch_processing/homework.md)
 
