@@ -54,11 +54,29 @@ Script to prepare the Dataset [download_data.sh](code/download_data.sh)
 
 ### Homework
 My Homework:
-Question 1 Spark version:
+Q1: Install Spark and PySpark
+
+Install Spark
+Run PySpark
+Create a local spark session
+Execute spark.version.
+
 My version shows 3.3.2
 
+Question 2 What is the average size of the Parquet (ending with .parquet extension) Files that were created (in MB)? Select the answer which most closely matches:
+6. 
+
+Question 3How many taxi trips were there on the 15th of October??
+62,610
+
+Question 4 What is the length of the longest trip in the dataset in hours?
+631,152,5 hours
+
 Question 5: Port
-4040
+4040 you can access it in this port locally.
+
+Question 6 Using the zone lookup data and the FHV October 2019 data, what is the name of the LEAST frequent pickup location Zone?:
+Jamaica Bay
 
 * [Homework](../cohorts/2023/week_5_batch_processing/homework.md)
 
